@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: EventListener
+metadata:
+  name: bili-link
+  label:
+    en_US: BiliLinkListener
+    zh_Hans: B站链接监听
+    zh_Hant: B站連結監聽
+    ja_JP: BiliLinkListener
+    vi_VN: BiliLinkListener
+    es_ES: BiliLinkListener
+spec:
+execution:
+  python:
+    path: bili_link_listener.py
+    attr: BiliLinkListener

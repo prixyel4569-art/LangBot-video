@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Plugin
+metadata:
+  author: prixyel4569-art
+  name: BiliLinkResolver
+  repository: ''
+  version: 0.1.0
+  description:
+    en_US: Parse Bilibili links in chat and reply with title, uploader, duration, views and cover. No LLM tokens used.
+    zh_Hans: 自动解析聊天中的 B 站链接，回复标题、UP 主、时长、播放量与封面；全程不经过大模型，不消耗 token。
+    zh_Hant: 自動解析聊天中的 B 站連結，回覆標題、UP 主、時長、播放量與封面；全程不經過大模型，不消耗 token。
+    ja_JP: チャット内の Bilibili リンクを解析し、タイトル・投稿者・再生時間・再生数・カバー画像を返信します。LLM は使いません。
+    vi_VN: Tự động phân tích liên kết Bilibili trong chat và trả lời tiêu đề, tác giả, thời lượng, lượt xem và ảnh bìa. Không dùng LLM.
+    es_ES: Analiza enlaces de Bilibili en el chat y responde con título, autor, duración, reproducciones y portada. Sin usar LLM.
+  label:
+    en_US: Bilibili Link Resolver
+    zh_Hans: B站链接解析
+    zh_Hant: B站連結解析
+    ja_JP: Bilibili リンク解析
+    vi_VN: Phân tích liên kết Bilibili
+    es_ES: Resolvedor de enlaces de Bilibili
+  icon: assets/icon.svg
+spec:
+  config: []
+  components:
+    EventListener:
+      fromFiles:
+        - components/event_listener/bili_link_listener.yaml
+execution:
+  python:
+    path: main.py
+    attr: BiliLinkResolver
