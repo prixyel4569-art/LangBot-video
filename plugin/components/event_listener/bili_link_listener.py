@@ -32,7 +32,8 @@ UA = (
 CACHE_TTL = 600
 MAX_DESC = 80
 VIDEO_QN = 16  # 360p（未登录时 B 站只给这一档）
-MAX_VIDEO_BYTES = 30 * 1024 * 1024
+# 与 NapCat 视频上传上限保持一致；超过则只发文字和封面。
+MAX_VIDEO_BYTES = 100 * 1024 * 1024
 
 _cache: dict[str, tuple[float, dict]] = {}
 
