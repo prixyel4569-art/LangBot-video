@@ -120,7 +120,6 @@ OK: OneBot 消息段 -> {'type': 'video', 'data': {'file': '/tmp/example.mp4'}}
 
 ## 安全与隐私
 
-- 不包含 API key、Cookie、账号密码、服务器地址或设备标识。
 - 只请求 B 站公开接口；短链解析只针对 `b23.tv` / `bili2233.cn`，不会把聊天中的任意 URL 当作代理目标。
 - 视频下载有 30 MB 上限，发送完成后删除 `/tmp` 临时文件。
 - 不保存聊天内容，不做用户画像；运行日志由 LangBot / NapCat 自身管理。
