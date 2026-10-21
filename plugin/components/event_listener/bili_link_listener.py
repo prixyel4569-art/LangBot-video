@@ -7,8 +7,10 @@ import os
 import re
 import shutil
 import subprocess
+import threading
 import time
 import urllib.request
+import urllib.error
 
 from langbot_plugin.api.definition.components.common.event_listener import EventListener
 from langbot_plugin.api.entities import context, events
@@ -25,6 +27,7 @@ BV_RE = re.compile(r"BV[0-9A-Za-z]{10}")
 AV_RE = re.compile(r"av(\d+)", re.IGNORECASE)
 
 API = "https://api.bilibili.com/x/web-interface/view"
+SPI_API = "https://api.bilibili.com/x/frontend/finger/spi"
 UA = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
@@ -36,15 +39,64 @@ VIDEO_QN = 16  # 360p（未登录时 B 站只给这一档）
 MAX_VIDEO_BYTES = 100 * 1024 * 1024
 
 _cache: dict[str, tuple[float, dict]] = {}
+_buvid_cookie = ""
+_buvid_lock = threading.Lock()
+
+
+def _base_headers() -> dict:
+    return {
+        "User-Agent": UA,
+        "Referer": "https://www.bilibili.com/",
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+        "Origin": "https://www.bilibili.com",
+    }
+
+
+def _get_buvid_cookie(force: bool = False) -> str:
+    """获取并缓存 B 站匿名 buvid Cookie，避免接口 412。"""
+    global _buvid_cookie
+    with _buvid_lock:
+        if _buvid_cookie and not force:
+            return _buvid_cookie
+        request = urllib.request.Request(SPI_API, headers=_base_headers())
+        with urllib.request.urlopen(request, timeout=10) as response:
+            data = json.loads(response.read().decode("utf-8", "replace"))
+        payload = data.get("data") or {}
+        b3 = payload.get("b_3")
+        b4 = payload.get("b_4")
+        if b3 and b4:
+            _buvid_cookie = f"buvid3={b3}; buvid4={b4}"
+        return _buvid_cookie
 
 
 def _get_json(url: str, timeout: int = 10) -> dict:
-    request = urllib.request.Request(
-        url,
-        headers={"User-Agent": UA, "Referer": "https://www.bilibili.com/"},
-    )
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        return json.loads(response.read().decode("utf-8", "replace"))
+    try:
+        cookie = _get_buvid_cookie()
+    except Exception as error:
+        logger.debug("BiliLinkResolver: 获取 buvid 失败: %s", error)
+        cookie = ""
+
+    for attempt in range(2):
+        headers = _base_headers()
+        if cookie:
+            headers["Cookie"] = cookie
+        request = urllib.request.Request(url, headers=headers)
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
+                return json.loads(response.read().decode("utf-8", "replace"))
+        except urllib.error.HTTPError as error:
+            if error.code == 412 and attempt == 0:
+                try:
+                    cookie = _get_buvid_cookie(force=True)
+                except Exception as refresh_error:
+                    logger.debug(
+                        "BiliLinkResolver: 刷新 buvid 失败: %s", refresh_error
+                    )
+                    cookie = ""
+                continue
+            raise
+    raise RuntimeError("Bili API request failed")
 
 
 def _resolve_short(url: str, timeout: int = 10) -> str:

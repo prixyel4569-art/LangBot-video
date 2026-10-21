@@ -114,6 +114,7 @@ OK: OneBot 消息段 -> {'type': 'video', 'data': {'file': '/tmp/example.mp4'}}
 - 视频需要先下载到服务器临时目录，再交给 NapCat 上传；会占用带宽和临时磁盘。
 - 超过 100 MB 的视频会跳过，只保留文字和封面；与 NapCat 的视频上传上限保持一致。
 - `b23.tv` 短链对 Python `urllib` 可能返回 412，代码优先使用系统 `curl` 跟随跳转。
+- B 站元数据接口现在可能要求匿名 `buvid3` / `buvid4` Cookie；插件会自动从 `finger/spi` 获取并缓存，遇到 412 会刷新一次重试。
 - NapCat 缺少 FFmpeg 时会打印缩略图生成失败，并改用默认缩略图；视频仍可发送，但封面帧可能不准确。
 - LangBot 升级可能覆盖 `message.py` 和 `aiocqhttp.py`，升级后需要重新运行补丁。
 - B 站接口不是稳定公开 API，字段或风控策略变化可能导致解析失败。
